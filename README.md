@@ -24,7 +24,7 @@ b. Back-end.\
 c. AI engine.
 ## Phase 3: DevOps(automating the pipeline). (14 days)
 a. Automated testing.\
-b. CI/CD piepline.
+b. CI/CD piepline.\
 c. Operations and Observation (watchtower).\
 d. Dashboard.
 ## Phase 4: Monitoring. (10 days)
