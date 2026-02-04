@@ -16,7 +16,8 @@ a. Setup Github.\
 b. Setup Asana.\
 c. Setup groupchat.\
 d. Define the why and who/what for.\
-e. Design the architechture. (draw.io)
+e. Design the architechture. (draw.io)\
+f. Slideshow.
 ## Phase 2: Coding front-end and back-end AI engine and docker. (14 days)
 a. Front-end.\
 b. Back-end.\
