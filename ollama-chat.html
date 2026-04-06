@@ -4,31 +4,74 @@
   <title>Ollama Chatbot with RAG & Vision</title>
   <!-- Load EB Garamond from Google Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;600&display=swap" rel="stylesheet">
-  <style>
-    body {
-      font-family: 'EB Garamond', serif;
-      max-width: 1000px;
-      margin: 0 auto;
-      padding: 20px;
-      background-color: #3d5b68
-    }
-    .container {
-            background: #a3d6db;
-            border-radius: 10px;
-            padding: 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        h1 {
-            color: white;
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        .controls {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-            align-items: center;
-        }
-      
+<style>
+  body {
+    font-family: 'EB Garamond', serif;
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #343b3f;
+    color: #f5f5f5;
+  }
+
+  .container {
+    background: #3d5b68;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+  }
+
+  h1 {
+    color: #ffffff;
+    text-align: center;
+    margin-bottom: 25px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+  }
+
+  .controls {
+    display: flex;
+    gap: 18px;
+    margin-bottom: 25px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .model-selector {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  select { 
+    padding: 10px 36px 10px 14px;
+    border: 1px solid #aab7be;
+    border-radius: 6px;
+    font-size: 15px;
+    font-family: 'EB Garamond', serif;
+    background-color: #fdfdfd;
+    color: #2a2a2a;
+
+    /* cleaner dropdown look */
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+
+    /* custom arrow */
+    background-image: url("data:image/svg+xml;utf8,<svg fill='%23333' height='10' viewBox='0 0 20 20'><path d='M5 7l5 5 5-5z'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+  }
+
+  select:focus {
+    outline: none;
+    border-color: #8899a1;
+    box-shadow: 0 0 0 2px rgba(255,255,255,0.1);
+  }
+
+  .file-upload {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
   </style>
