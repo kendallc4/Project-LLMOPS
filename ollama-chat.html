@@ -30,8 +30,8 @@ h1 {
   }
 
   #chat { 
-    background: #3d5b68; /* changed from white #fafafa to dark color */
-    color: #f5f5f5; /* ensures text is readable */
+    background: #3d5b68;
+    color: #f5f5f5;
   }
 
   .controls {
@@ -117,4 +117,493 @@ h1 {
         .file-item:last-child {
             margin-bottom: 0;
         }
-  </style>
+        .file-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .file-type {
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .file-type.pdf { background: #dc3545; color: white; }
+        .file-type.image { background: #fd7e14; color: white; }
+        .file-type.text { background: #6c757d; color: white; }
+        .remove-file {
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            padding: 2px 8px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .remove-file:hover {
+            background: #c82333;
+        }
+        .image-preview {
+            max-width: 200px;
+            max-height: 150px;
+            border-radius: 5px;
+            margin-top: 5px;
+        }
+        #chat { 
+            border: none;
+            height: 400px; 
+            overflow-y: auto; 
+            padding: 15px; 
+            margin-bottom: 15px; 
+            background: #a3b6bd;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+        .input-container {
+            display: flex;
+            gap: 10px;
+        }
+        #input { 
+            flex: 1;
+            padding: 12px; 
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            font-family: 'EB Garamond', serif;
+        }
+        button { 
+            padding: 12px 24px; 
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 18px;
+            font-family: 'EB Garamond', serif;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .message {
+            margin-bottom: 15px;
+            padding: 8px;
+            border-radius: 5px;
+        }
+        .user-message {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+        }
+        .ai-message {
+            background: #f1f8e9;
+            border-left: 4px solid #4caf50;
+        }
+        .error-message {
+            background: #ffebee;
+            border-left: 4px solid #f44336;
+            color: #c62828;
+        }
+        .loading {
+            color: #666;
+            font-style: italic;
+        }
+        .status {
+            text-align: center;
+            margin-top: 10px;
+            padding: 10px;
+            background: #e8f5e8;
+            border-radius: 5px;
+            color: #2e7d2e;
+        }
+        .rag-mode {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 5px;
+            margin-bottom: 15px;
+        }
+        .rag-mode.active {
+            background: #d4edda;
+            border-color: #c3e6cb;
+        }
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🦙 Ollama Chat with RAG & Vision</h1>
+        
+        <div class="controls">
+            <div class="model-selector">
+                <label for="model">Model:</label>
+                <select id="model">
+                    <option value="llava:latest">LLaVA (Vision + Text)</option>
+
+                    <option value="qwen2.5-coder:7b">Qwen2.5 Coder</option>
+                    <option value="dolphin-mistral:latest">Dolphin Mistral</option>
+
+                </select>
+            </div>
+            
+            <div class="file-upload">
+                <input type="file" id="fileInput" class="file-input" multiple accept=".pdf,.txt,.doc,.docx,.png,.jpg,.jpeg,.gif,.bmp,.webp">
+                <label for="fileInput" class="file-button">
+                    📁 Upload Files
+                </label>
+                <input type="file" id="imageInput" class="file-input" accept="image/*">
+                <label for="imageInput" class="file-button">
+                    🖼️ Upload Image
+                </label>
+            </div>
+            
+            <button onclick="clearChat()">Clear Chat</button>
+        </div>
+
+        <div id="ragMode" class="rag-mode" style="display: none;">
+            <div class="checkbox-container">
+                <input type="checkbox" id="ragEnabled" checked>
+                <label for="ragEnabled">RAG Mode Active</label>
+            </div>
+            <span id="ragInfo">Documents loaded and ready for questions</span>
+        </div>
+
+        <div id="uploadedFiles" class="uploaded-files" style="display: none;">
+            <h4>Uploaded Files:</h4>
+            <div id="filesList"></div>
+        </div>
+
+        <div id="chat"></div>
+        
+        <div class="input-container">
+            <input type="text" id="input" placeholder="Type your message here..." onkeypress="if(event.key==='Enter' && !event.shiftKey) {event.preventDefault(); sendMessage()}">
+            <button id="sendBtn" onclick="sendMessage()">Send</button>
+        </div>
+
+        <div id="status" class="status" style="display: none;"></div>
+    </div>
+
+    <script>
+        let chatHistory = [];
+        let uploadedFiles = [];
+        let vectorStore = null;
+
+        function showStatus(message, isError = false) {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.style.display = 'block';
+            status.style.background = isError ? '#ffebee' : '#e8f5e8';
+            status.style.color = isError ? '#c62828' : '#2e7d2e';
+            setTimeout(() => {
+                status.style.display = 'none';
+            }, 3000);
+        }
+
+        function addMessage(content, type) {
+            const chat = document.getElementById('chat');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}-message`;
+            
+            if (type === 'user') {
+                messageDiv.innerHTML = `<strong>You:</strong> ${content}`;
+            } else if (type === 'ai') {
+                messageDiv.innerHTML = `<strong>AI:</strong> ${content}`;
+            } else if (type === 'error') {
+                messageDiv.innerHTML = `<strong>Error:</strong> ${content}`;
+            }
+            
+            chat.appendChild(messageDiv);
+            chat.scrollTop = chat.scrollHeight;
+        }
+
+        function addLoadingMessage() {
+            const chat = document.getElementById('chat');
+            const loadingDiv = document.createElement('div');
+            loadingDiv.className = 'message loading';
+            loadingDiv.id = 'loading-message';
+            loadingDiv.innerHTML = '<strong>AI:</strong> Thinking...';
+            chat.appendChild(loadingDiv);
+            chat.scrollTop = chat.scrollHeight;
+            return loadingDiv;
+        }
+
+        function removeLoadingMessage() {
+            const loading = document.getElementById('loading-message');
+            if (loading) {
+                loading.remove();
+            }
+        }
+
+        function updateFilesList() {
+            const filesList = document.getElementById('filesList');
+            const uploadedFilesDiv = document.getElementById('uploadedFiles');
+            const ragMode = document.getElementById('ragMode');
+            
+            if (uploadedFiles.length === 0) {
+                uploadedFilesDiv.style.display = 'none';
+                ragMode.style.display = 'none';
+                return;
+            }
+            
+            uploadedFilesDiv.style.display = 'block';
+            ragMode.style.display = 'block';
+            ragMode.classList.add('active');
+            
+            filesList.innerHTML = '';
+            uploadedFiles.forEach((file, index) => {
+                const fileItem = document.createElement('div');
+                fileItem.className = 'file-item';
+                
+                const fileInfo = document.createElement('div');
+                fileInfo.className = 'file-info';
+                
+                const fileType = document.createElement('span');
+                fileType.className = `file-type ${file.type}`;
+                fileType.textContent = file.type.toUpperCase();
+                
+                const fileName = document.createElement('span');
+                fileName.textContent = file.name;
+                
+                fileInfo.appendChild(fileType);
+                fileInfo.appendChild(fileName);
+                
+                // Add image preview for images
+                if (file.type === 'image' && file.preview) {
+                    const img = document.createElement('img');
+                    img.src = file.preview;
+                    img.className = 'image-preview';
+                    fileInfo.appendChild(img);
+                }
+                
+                const removeBtn = document.createElement('button');
+                removeBtn.className = 'remove-file';
+                removeBtn.textContent = '×';
+                removeBtn.onclick = () => removeFile(index);
+                
+                fileItem.appendChild(fileInfo);
+                fileItem.appendChild(removeBtn);
+                filesList.appendChild(fileItem);
+            });
+        }
+
+        function removeFile(index) {
+            uploadedFiles.splice(index, 1);
+            updateFilesList();
+            showStatus('File removed');
+        }
+
+        function getFileType(file) {
+            if (file.type.startsWith('image/')) return 'image';
+            if (file.type === 'application/pdf') return 'pdf';
+            if (file.type.startsWith('text/')) return 'text';
+            return 'document';
+        }
+
+        async function processFile(file) {
+            const fileType = getFileType(file);
+            let content = '';
+            let preview = null;
+            
+            if (fileType === 'image') {
+                // For images, we'll send the base64 data
+                const reader = new FileReader();
+                return new Promise((resolve) => {
+                    reader.onload = (e) => {
+                        preview = e.target.result;
+                        resolve({
+                            name: file.name,
+                            type: fileType,
+                            content: e.target.result,
+                            preview: preview
+                        });
+                    };
+                    reader.readAsDataURL(file);
+                });
+            } else if (fileType === 'text') {
+                // For text files, read as text
+                const reader = new FileReader();
+                return new Promise((resolve) => {
+                    reader.onload = (e) => {
+                        resolve({
+                            name: file.name,
+                            type: fileType,
+                            content: e.target.result
+                        });
+                    };
+                    reader.readAsText(file);
+                });
+            } else if (fileType === 'pdf') {
+                // For PDFs, we'll need to send to backend for processing
+                const formData = new FormData();
+                formData.append('file', file);
+                
+                try {
+                    const response = await fetch('http://localhost:8000/api/process-pdf', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error('PDF processing failed');
+                    }
+                    
+                    const data = await response.json();
+                    return {
+                        name: file.name,
+                        type: fileType,
+                        content: data.text
+                    };
+                } catch (error) {
+                    showStatus(`Error processing PDF: ${error.message}`, true);
+                    return null;
+                }
+            }
+            
+            return null;
+        }
+
+        // File upload handlers
+        document.getElementById('fileInput').addEventListener('change', async (e) => {
+            const files = Array.from(e.target.files);
+            showStatus('Processing files...');
+            
+            for (const file of files) {
+                const processedFile = await processFile(file);
+                if (processedFile) {
+                    uploadedFiles.push(processedFile);
+                }
+            }
+            
+            updateFilesList();
+            showStatus(`${files.length} file(s) uploaded successfully!`);
+            e.target.value = ''; // Clear input
+        });
+
+        document.getElementById('imageInput').addEventListener('change', async (e) => {
+            const files = Array.from(e.target.files);
+            showStatus('Processing images...');
+            
+            for (const file of files) {
+                const processedFile = await processFile(file);
+                if (processedFile) {
+                    uploadedFiles.push(processedFile);
+                }
+            }
+            
+            updateFilesList();
+            showStatus(`${files.length} image(s) uploaded successfully!`);
+            e.target.value = ''; // Clear input
+        });
+
+        async function sendMessage() {
+            const input = document.getElementById('input');
+            const sendBtn = document.getElementById('sendBtn');
+            const model = document.getElementById('model').value;
+            const ragEnabled = document.getElementById('ragEnabled').checked;
+            const message = input.value.trim();
+            
+            if (!message) return;
+            
+            // Add user message
+            addMessage(message, 'user');
+            chatHistory.push({role: 'user', content: message});
+            
+            // Clear input and disable send button
+            input.value = '';
+            sendBtn.disabled = true;
+            sendBtn.textContent = 'Sending...';
+            
+            // Add loading message
+            const loadingMsg = addLoadingMessage();
+            
+            try {
+                const requestData = {
+                    model: model,
+                    prompt: message,
+                    stream: false,
+                    options: {
+                        temperature: 0.7,
+                        num_predict: 2048
+                    }
+                };
+
+                // Add uploaded files if any
+                if (uploadedFiles.length > 0 && ragEnabled) {
+                    requestData.files = uploadedFiles;
+                    requestData.rag_enabled = true;
+                }
+
+                const response = await fetch('http://localhost:8000/api/generate', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(requestData)
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                
+                // Remove loading message
+                removeLoadingMessage();
+                
+                if (data.response) {
+                    addMessage(data.response, 'ai');
+                    chatHistory.push({role: 'assistant', content: data.response});
+                    showStatus('Message sent successfully!');
+                } else {
+                    throw new Error('No response received from model');
+                }
+                
+            } catch (error) {
+                removeLoadingMessage();
+                console.error('Error:', error);
+                addMessage(`Failed to get response: ${error.message}. Make sure the proxy is running on localhost:8000`, 'error');
+                showStatus('Failed to send message', true);
+            } finally {
+                // Re-enable send button
+                sendBtn.disabled = false;
+                sendBtn.textContent = 'Send';
+                input.focus();
+            }
+        }
+
+        function clearChat() {
+            document.getElementById('chat').innerHTML = '';
+            chatHistory = [];
+            uploadedFiles = [];
+            updateFilesList();
+            showStatus('Chat cleared');
+        }
+
+        // Test connection on load
+        window.addEventListener('load', async () => {
+            try {
+                const response = await fetch('http://localhost:8000/api/tags');
+                if (response.ok) {
+                    showStatus('✅ Connected to Ollama via proxy successfully!');
+                } else {
+                    throw new Error('Connection failed');
+                }
+            } catch (error) {
+                showStatus('❌ Cannot connect to proxy. Make sure python3 ollama-proxy.py is running', true);
+            }
+        });
+
+        // Focus input on load
+        document.getElementById('input').focus();
+    </script>
+</body>
+</html>
