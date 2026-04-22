@@ -14,13 +14,12 @@ body {
   height: 100vh;
 }
 
-/*sidebar*/
 .sidebar {
   width: 260px;
   background: #2f3437;
   padding: 20px;
   box-sizing: border-box;
-  overflow-y: auto; /* ✅ scroll */
+  overflow-y: auto;
 }
 
 .sidebar h2 {
@@ -28,7 +27,6 @@ body {
   font-weight: 400;
 }
 
-/*main area*/
 .main {
   flex: 1;
   display: flex;
@@ -37,7 +35,6 @@ body {
   padding: 20px;
 }
 
-/*top bar*/
 .topbar {
   display: flex;
   justify-content: space-between;
@@ -68,9 +65,9 @@ body {
   align-items: center;
   justify-content: center;
   font-size: 20px;
+  cursor: pointer;
 }
 
-/*chatbox*/
 .chat-wrapper {
   flex: 1;
   display: flex;
@@ -89,7 +86,6 @@ body {
   color: black;
 }
 
-/*input*/
 .bottom-bar {
   display: flex;
   justify-content: center;
@@ -129,13 +125,12 @@ body {
   cursor: pointer;
 }
 
-/*messages*/
 .message {
   margin-bottom: 10px;
   padding: 8px;
   border-radius: 8px;
-  word-wrap: break-word;     
-  overflow-wrap: break-word; 
+  word-wrap: break-word;
+  overflow-wrap: break-word;
   word-break: break-word;
 }
 
@@ -151,7 +146,88 @@ body {
   background: #ffd6d6;
 }
 
-/*mobile*/
+#filePreview {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+.file-chip {
+  background: #e6e6e6;
+  color: #000;
+  padding: 6px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.file-chip img {
+  width: 25px;
+  height: 25px;
+  object-fit: cover;
+  border-radius: 5px;
+}
+
+.settings-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.4);
+  display: none;
+  justify-content: flex-end;
+}
+
+.settings-panel {
+  width: 320px;
+  height: 100%;
+  background: #2f3437;
+  padding: 25px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.settings-panel h2 {
+  margin: 0 0 10px 0;
+  font-weight: 400;
+}
+
+.settings-field {
+  display: flex;
+  flex-direction: column;
+}
+
+.settings-field label {
+  font-size: 13px;
+  margin-bottom: 5px;
+}
+
+.settings-field input {
+  padding: 10px;
+  border-radius: 10px;
+  border: none;
+}
+
+.settings-btn {
+  padding: 12px;
+  border: none;
+  border-radius: 12px;
+  background: #6dd3c7;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.logout-btn {
+  margin-top: auto;
+  background: #ff6b6b;
+}
+
 @media (max-width: 800px) {
   .sidebar {
     display: none;
@@ -171,7 +247,6 @@ body {
 
 <body>
 
-<!-- SIDEBAR -->
 <div class="sidebar">
   <div style="display:flex; justify-content:space-between; align-items:center;">
     <h2>Chat history</h2>
@@ -179,10 +254,8 @@ body {
   </div>
 </div>
 
-<!-- MAIN -->
 <div class="main">
 
-  <!-- TOP BAR -->
   <div class="topbar">
     <div class="top-controls">
       <label class="pill">
@@ -197,15 +270,15 @@ body {
       </select>
     </div>
 
-    <div class="profile">👤</div>
+    <div class="profile" onclick="toggleSettings()">👤</div>
   </div>
 
-  <!-- CHAT -->
+  <div id="filePreview"></div>
+
   <div class="chat-wrapper">
     <div id="chat"></div>
   </div>
 
-  <!-- INPUT -->
   <div class="bottom-bar">
     <div class="input-container">
       <button class="icon-btn" onclick="clearChat()">🔄</button>
@@ -217,11 +290,43 @@ body {
 
 </div>
 
+<div class="settings-overlay" id="settingsOverlay" onclick="outsideClick(event)">
+  <div class="settings-panel">
+    <h2>Account</h2>
+
+    <div class="settings-field">
+      <label>Name</label>
+      <input id="nameInput" type="text" placeholder="Your name">
+    </div>
+
+    <div class="settings-field">
+      <label>Email</label>
+      <input id="emailInput" type="email" placeholder="Your email">
+    </div>
+
+    <button class="settings-btn" onclick="saveSettings()">Save</button>
+
+    <button class="settings-btn">Change Password</button>
+    <button class="settings-btn">Security Key</button>
+
+    <button class="settings-btn logout-btn">Log Out</button>
+  </div>
+</div>
+
 <script>
 
 let chatHistory = [];
 let uploadedFiles = [];
 let currentSessionId = null;
+
+function toggleSettings() {
+  const el = document.getElementById('settingsOverlay');
+  el.style.display = el.style.display === 'flex' ? 'none' : 'flex';
+}
+
+function outsideClick(e) {
+  if (e.target.id === 'settingsOverlay') toggleSettings();
+}
 
 function addMessage(content, type) {
   const chat = document.getElementById('chat');
@@ -232,27 +337,29 @@ function addMessage(content, type) {
   chat.scrollTop = chat.scrollHeight;
 }
 
-function addLoadingMessage() {
-  const chat = document.getElementById('chat');
-  const div = document.createElement('div');
-  div.id = 'loading';
-  div.innerText = "Thinking...";
-  chat.appendChild(div);
-  return div;
+function saveSettings() {
+  const name = document.getElementById('nameInput').value;
+  const email = document.getElementById('emailInput').value;
+  localStorage.setItem('user_name', name);
+  localStorage.setItem('user_email', email);
 }
 
-function removeLoadingMessage() {
-  const el = document.getElementById('loading');
-  if (el) el.remove();
-}
-
-/*file upload*/
+window.onload = () => {
+  const name = localStorage.getItem('user_name');
+  const email = localStorage.getItem('user_email');
+  if (name) document.getElementById('nameInput').value = name;
+  if (email) document.getElementById('emailInput').value = email;
+};
 
 document.getElementById('fileInput').addEventListener('change', async (e) => {
   const files = Array.from(e.target.files);
   uploadedFiles = [];
 
+  const preview = document.getElementById('filePreview');
+  preview.innerHTML = "";
+
   for (const file of files) {
+
     const base64 = await new Promise((resolve) => {
       const reader = new FileReader();
       reader.onload = () => resolve(reader.result);
@@ -260,7 +367,6 @@ document.getElementById('fileInput').addEventListener('change', async (e) => {
     });
 
     let type = "text";
-
     if (file.type.startsWith("image/")) type = "image";
     else if (file.type === "application/pdf") type = "pdf";
 
@@ -269,10 +375,23 @@ document.getElementById('fileInput').addEventListener('change', async (e) => {
       name: file.name,
       content: base64
     });
+
+    const chip = document.createElement("div");
+    chip.className = "file-chip";
+
+    if (type === "image") {
+      const img = document.createElement("img");
+      img.src = base64;
+      chip.appendChild(img);
+    }
+
+    const label = document.createElement("span");
+    label.innerText = file.name;
+
+    chip.appendChild(label);
+    preview.appendChild(chip);
   }
 });
-
-/*Send Message*/
 
 async function sendMessage() {
   const input = document.getElementById('input');
@@ -286,14 +405,12 @@ async function sendMessage() {
   input.value = '';
   sendBtn.disabled = true;
 
-  const loading = addLoadingMessage();
-
   try {
     const response = await fetch('http://localhost:8000/api/generate', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({
-        model: model,
+        model,
         prompt: message,
         files: uploadedFiles,
         session_id: currentSessionId,
@@ -303,111 +420,22 @@ async function sendMessage() {
 
     const data = await response.json();
 
-    removeLoadingMessage();
-
     currentSessionId = data.session_id;
 
     addMessage(data.response || "No response", 'ai');
 
-    loadChats();
+    uploadedFiles = [];
+    document.getElementById('filePreview').innerHTML = "";
+    document.getElementById('fileInput').value = "";
 
   } catch (err) {
-    removeLoadingMessage();
     addMessage("Error: " + err.message, 'error');
   }
 
   sendBtn.disabled = false;
 }
 
-/*Chat History*/
-
-async function loadChats() {
-  const res = await fetch('http://localhost:8000/api/chats');
-  const chats = await res.json();
-
-  const sidebar = document.querySelector('.sidebar');
-  sidebar.innerHTML = `
-    <div style="display:flex; justify-content:space-between; align-items:center;">
-      <h2>Chat history</h2>
-      <button class="icon-btn" onclick="clearAllChats()">🗑️</button>
-    </div>
-  `;
-
-  chats.reverse().forEach(chat => {
-    const wrapper = document.createElement('div');
-    wrapper.style.display = 'flex';
-    wrapper.style.justifyContent = 'space-between';
-    wrapper.style.alignItems = 'center';
-    wrapper.style.marginBottom = '10px';
-    wrapper.style.background = '#3a3f42';
-    wrapper.style.padding = '6px';
-    wrapper.style.borderRadius = '6px';
-
-    const title = document.createElement('div');
-    title.style.cursor = 'pointer';
-    title.innerText = chat.preview || "New Chat";
-    title.onclick = () => loadChat(chat.id);
-
-    const delBtn = document.createElement('button');
-    delBtn.innerText = '❌';
-    delBtn.style.background = 'transparent';
-    delBtn.style.border = 'none';
-    delBtn.style.cursor = 'pointer';
-    delBtn.style.color = 'white';
-
-    delBtn.onclick = async (e) => {
-      e.stopPropagation();
-      await fetch(`http://localhost:8000/api/chats/${chat.id}`, {
-        method: 'DELETE'
-      });
-      loadChats();
-    };
-
-    wrapper.appendChild(title);
-    wrapper.appendChild(delBtn);
-
-    sidebar.appendChild(wrapper);
-  });
-}
-
-async function loadChat(sessionId) {
-  const res = await fetch(`http://localhost:8000/api/chats/${sessionId}`);
-  const chat = await res.json();
-
-  currentSessionId = sessionId;
-
-  const chatDiv = document.getElementById('chat');
-  chatDiv.innerHTML = '';
-
-  chat.messages.forEach(msg => {
-    addMessage(msg.content, msg.role === 'user' ? 'user' : 'ai');
-  });
-}
-
-function clearChat() {
-  currentSessionId = null;
-  document.getElementById('chat').innerHTML = '';
-}
-
-/*Clear all History*/
-async function clearAllChats() {
-  if (!confirm("Delete ALL chat history?")) return;
-
-  await fetch('http://localhost:8000/api/chats', {
-    method: 'DELETE'
-  });
-
-  document.getElementById('chat').innerHTML = '';
-  currentSessionId = null;
-
-  loadChats();
-}
-
-loadChats();
-document.getElementById('input').focus();
-
 </script>
 
 </body>
 </html>
-
