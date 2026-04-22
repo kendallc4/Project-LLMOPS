@@ -146,6 +146,31 @@ body {
   background: #ffd6d6;
 }
 
+#filePreview {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+.file-chip {
+  background: #e6e6e6;
+  color: #000;
+  padding: 6px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.file-chip img {
+  width: 25px;
+  height: 25px;
+  object-fit: cover;
+  border-radius: 5px;
+}
+
 .settings-overlay {
   position: fixed;
   top: 0;
@@ -248,6 +273,8 @@ body {
     <div class="profile" onclick="toggleSettings()">👤</div>
   </div>
 
+  <div id="filePreview"></div>
+
   <div class="chat-wrapper">
     <div id="chat"></div>
   </div>
@@ -269,18 +296,20 @@ body {
 
     <div class="settings-field">
       <label>Name</label>
-      <input type="text" placeholder="Your name">
+      <input id="nameInput" type="text" placeholder="Your name">
     </div>
 
     <div class="settings-field">
       <label>Email</label>
-      <input type="email" placeholder="Your email">
+      <input id="emailInput" type="email" placeholder="Your email">
     </div>
+
+    <button class="settings-btn" onclick="saveSettings()">Save</button>
 
     <button class="settings-btn">Change Password</button>
     <button class="settings-btn">Security Key</button>
 
-    <button class="settings-btn logout-btn">Log Out</button>
+    <button class="settings-btn logout-btn" onclick="logout()">Log Out</button>
   </div>
 </div>
 
@@ -290,15 +319,20 @@ let chatHistory = [];
 let uploadedFiles = [];
 let currentSessionId = null;
 
+let user = {
+  id: null,
+  name: null,
+  email: null,
+  token: null
+};
+
 function toggleSettings() {
   const el = document.getElementById('settingsOverlay');
   el.style.display = el.style.display === 'flex' ? 'none' : 'flex';
 }
 
 function outsideClick(e) {
-  if (e.target.id === 'settingsOverlay') {
-    toggleSettings();
-  }
+  if (e.target.id === 'settingsOverlay') toggleSettings();
 }
 
 function addMessage(content, type) {
@@ -310,25 +344,39 @@ function addMessage(content, type) {
   chat.scrollTop = chat.scrollHeight;
 }
 
-function addLoadingMessage() {
-  const chat = document.getElementById('chat');
-  const div = document.createElement('div');
-  div.id = 'loading';
-  div.innerText = "Thinking...";
-  chat.appendChild(div);
-  return div;
+function saveSettings() {
+  user.name = document.getElementById('nameInput').value;
+  user.email = document.getElementById('emailInput').value;
+
+  localStorage.setItem('user_name', user.name);
+  localStorage.setItem('user_email', user.email);
 }
 
-function removeLoadingMessage() {
-  const el = document.getElementById('loading');
-  if (el) el.remove();
+function logout() {
+  user = { id: null, name: null, email: null, token: null };
+  document.getElementById('nameInput').value = '';
+  document.getElementById('emailInput').value = '';
+  localStorage.removeItem('user_name');
+  localStorage.removeItem('user_email');
 }
+
+window.onload = () => {
+  user.name = localStorage.getItem('user_name');
+  user.email = localStorage.getItem('user_email');
+
+  if (user.name) document.getElementById('nameInput').value = user.name;
+  if (user.email) document.getElementById('emailInput').value = user.email;
+};
 
 document.getElementById('fileInput').addEventListener('change', async (e) => {
   const files = Array.from(e.target.files);
   uploadedFiles = [];
 
+  const preview = document.getElementById('filePreview');
+  preview.innerHTML = "";
+
   for (const file of files) {
+
     const base64 = await new Promise((resolve) => {
       const reader = new FileReader();
       reader.onload = () => resolve(reader.result);
@@ -336,15 +384,44 @@ document.getElementById('fileInput').addEventListener('change', async (e) => {
     });
 
     let type = "text";
-
     if (file.type.startsWith("image/")) type = "image";
     else if (file.type === "application/pdf") type = "pdf";
 
-    uploadedFiles.push({
+    const fileObj = {
       type,
       name: file.name,
       content: base64
-    });
+    };
+
+    uploadedFiles.push(fileObj);
+
+    const chip = document.createElement("div");
+    chip.className = "file-chip";
+
+    if (type === "image") {
+      const img = document.createElement("img");
+      img.src = base64;
+      chip.appendChild(img);
+    }
+
+    const label = document.createElement("span");
+    label.innerText = file.name;
+
+    const remove = document.createElement("button");
+    remove.innerText = "x";
+    remove.style.marginLeft = "6px";
+    remove.style.border = "none";
+    remove.style.cursor = "pointer";
+
+    remove.onclick = () => {
+      uploadedFiles = uploadedFiles.filter(f => f !== fileObj);
+      chip.remove();
+    };
+
+    chip.appendChild(label);
+    chip.appendChild(remove);
+
+    preview.appendChild(chip);
   }
 });
 
@@ -360,122 +437,36 @@ async function sendMessage() {
   input.value = '';
   sendBtn.disabled = true;
 
-  const loading = addLoadingMessage();
-
   try {
     const response = await fetch('http://localhost:8000/api/generate', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({
-        model: model,
+        model,
         prompt: message,
         files: uploadedFiles,
         session_id: currentSessionId,
-        rag_enabled: true
+        rag_enabled: true,
+        user_id: user.id
       })
     });
 
     const data = await response.json();
 
-    removeLoadingMessage();
-
     currentSessionId = data.session_id;
 
     addMessage(data.response || "No response", 'ai');
 
-    loadChats();
+    uploadedFiles = [];
+    document.getElementById('filePreview').innerHTML = "";
+    document.getElementById('fileInput').value = "";
 
   } catch (err) {
-    removeLoadingMessage();
     addMessage("Error: " + err.message, 'error');
   }
 
   sendBtn.disabled = false;
 }
-
-async function loadChats() {
-  const res = await fetch('http://localhost:8000/api/chats');
-  const chats = await res.json();
-
-  const sidebar = document.querySelector('.sidebar');
-  sidebar.innerHTML = `
-    <div style="display:flex; justify-content:space-between; align-items:center;">
-      <h2>Chat history</h2>
-      <button class="icon-btn" onclick="clearAllChats()">🗑️</button>
-    </div>
-  `;
-
-  chats.reverse().forEach(chat => {
-    const wrapper = document.createElement('div');
-    wrapper.style.display = 'flex';
-    wrapper.style.justifyContent = 'space-between';
-    wrapper.style.alignItems = 'center';
-    wrapper.style.marginBottom = '10px';
-    wrapper.style.background = '#3a3f42';
-    wrapper.style.padding = '6px';
-    wrapper.style.borderRadius = '6px';
-
-    const title = document.createElement('div');
-    title.style.cursor = 'pointer';
-    title.innerText = chat.preview || "New Chat";
-    title.onclick = () => loadChat(chat.id);
-
-    const delBtn = document.createElement('button');
-    delBtn.innerText = '❌';
-    delBtn.style.background = 'transparent';
-    delBtn.style.border = 'none';
-    delBtn.style.cursor = 'pointer';
-    delBtn.style.color = 'white';
-
-    delBtn.onclick = async (e) => {
-      e.stopPropagation();
-      await fetch(`http://localhost:8000/api/chats/${chat.id}`, {
-        method: 'DELETE'
-      });
-      loadChats();
-    };
-
-    wrapper.appendChild(title);
-    wrapper.appendChild(delBtn);
-
-    sidebar.appendChild(wrapper);
-  });
-}
-
-async function loadChat(sessionId) {
-  const res = await fetch(`http://localhost:8000/api/chats/${sessionId}`);
-  const chat = await res.json();
-
-  currentSessionId = sessionId;
-
-  const chatDiv = document.getElementById('chat');
-  chatDiv.innerHTML = '';
-
-  chat.messages.forEach(msg => {
-    addMessage(msg.content, msg.role === 'user' ? 'user' : 'ai');
-  });
-}
-
-function clearChat() {
-  currentSessionId = null;
-  document.getElementById('chat').innerHTML = '';
-}
-
-async function clearAllChats() {
-  if (!confirm("Delete ALL chat history?")) return;
-
-  await fetch('http://localhost:8000/api/chats', {
-    method: 'DELETE'
-  });
-
-  document.getElementById('chat').innerHTML = '';
-  currentSessionId = null;
-
-  loadChats();
-}
-
-loadChats();
-document.getElementById('input').focus();
 
 </script>
 
