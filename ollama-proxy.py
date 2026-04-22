@@ -127,7 +127,6 @@ async def generate_response(request: ChatRequest):
     prompt = request.prompt
     images = []
 
-    # ---------------- FIXED FILE HANDLING ----------------
     if request.files and request.rag_enabled:
 
         context_docs = []
@@ -139,20 +138,21 @@ async def generate_response(request: ChatRequest):
             if not file_content:
                 continue
 
-            # IMAGE
             if file_type == "image":
                 images.append(process_image_for_vision(file_content))
 
-            # PDF / TEXT
-            elif file_type in ["pdf", "document", "text"]:
-                if file_type == "pdf":
-                    try:
-                        raw = base64.b64decode(process_image_for_vision(file_content))
-                        context_docs.append(process_pdf_content(raw))
-                    except:
-                        pass
-                else:
-                    context_docs.append(file_content[:2000])
+            elif file_type == "pdf":
+                try:
+                    raw = base64.b64decode(process_image_for_vision(file_content))
+                    context_docs.append(process_pdf_content(raw))
+                except Exception:
+                    pass
+
+            elif file_type == "text":
+                context_docs.append(file_content[:2000])
+
+            else:
+                print("UNKNOWN FILE TYPE:", file_type)
 
         if context_docs:
             prompt = f"""Based on the following context:
