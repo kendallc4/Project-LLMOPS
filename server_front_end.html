@@ -1,1 +1,791 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet" />
 
+  <style>
+    /* ─────────────────────────────────────────
+       CSS VARIABLES — edit here to retheme
+    ───────────────────────────────────────── */
+    :root {
+      --sidebar-bg:    #2E3239;
+      --sidebar-w:     240px;
+      --main-bg:       #EDECEA;
+      --card-bg:       #FFFFFF;
+      --card-radius:   8px;
+      --card-shadow:   0 1px 4px rgba(0,0,0,0.07), 0 2px 10px rgba(0,0,0,0.05);
+      --text-dark:     #1A1A1A;
+      --text-muted:    #999;
+      --sidebar-text:  #B8BDC6;
+      --sidebar-hover: #363B44;
+      --kill-red:      #C93B3B;
+      --green:         #22A06B;
+      --amber:         #D97706;
+      --red:           #DC2626;
+      --blue:          #2563EB;
+      --font:          'DM Mono', monospace;
+    }
+
+    /* ─────────────────────────────────────────
+       RESET & BASE
+    ───────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font);
+      font-size: 13px;
+      background: var(--main-bg);
+      color: var(--text-dark);
+      min-height: 100vh;
+      display: flex;
+    }
+
+    /* ─────────────────────────────────────────
+       SIDEBAR
+       Dark panel with logo + grouped nav links.
+       Topbar removed — sidebar starts at the top.
+    ───────────────────────────────────────── */
+    aside {
+      width: var(--sidebar-w);
+      min-height: 100vh;
+      background: var(--sidebar-bg);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      position: sticky;
+      top: 0;
+      align-self: flex-start;
+    }
+
+    /* Logo row with pulsing live dot */
+    .sidebar-logo {
+      padding: 24px 20px 20px;
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #fff;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    /* Pulsing green dot — signals live system status */
+    .live-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--green);
+      flex-shrink: 0;
+      animation: pulse 2.2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%       { opacity: 0.4; transform: scale(0.85); }
+    }
+
+    /* Section group label (e.g. "Monitoring") */
+    .nav-section-label {
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.25);
+      padding: 18px 20px 6px;
+    }
+
+    /* Individual nav link */
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      padding: 12px 20px;
+      color: var(--sidebar-text);
+      text-decoration: none;
+      font-size: 12.5px;
+      font-weight: 400;
+      letter-spacing: 0.03em;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+      border-left: 3px solid transparent; /* accent strip, invisible until active */
+    }
+
+    .nav-item:hover { background: var(--sidebar-hover); color: #ddd; }
+
+    /* Active item gets indigo left-border accent + full white text */
+    .nav-item.active {
+      background: var(--sidebar-hover);
+      color: #fff;
+      border-left-color: #7C8CF8;
+    }
+
+    .nav-item svg {
+      width: 16px; height: 16px;
+      stroke: currentColor; fill: none; stroke-width: 1.8;
+      flex-shrink: 0; opacity: 0.7;
+    }
+
+    .nav-item:hover svg, .nav-item.active svg { opacity: 1; }
+
+
+    /* ─────────────────────────────────────────
+       MAIN CONTENT AREA
+    ───────────────────────────────────────── */
+    main {
+      flex: 1;
+      padding: 28px 28px 100px;
+      overflow-y: auto;
+    }
+
+    /* Page title + last-updated timestamp row */
+    .page-header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: 22px;
+    }
+
+    .page-title {
+      font-size: 15px; font-weight: 500;
+      letter-spacing: 0.06em; text-transform: uppercase;
+    }
+
+    .last-updated { font-size: 11px; color: var(--text-muted); letter-spacing: 0.04em; }
+
+
+    /* ─────────────────────────────────────────
+       TOP METRICS ROW
+       4 stat cards with live numbers + status lines
+    ───────────────────────────────────────── */
+    .metrics-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+
+    .metric-card {
+      background: var(--card-bg);
+      border-radius: var(--card-radius);
+      box-shadow: var(--card-shadow);
+      padding: 16px 18px;
+      display: flex; flex-direction: column; gap: 6px;
+      border-top: 3px solid transparent; /* colored per-card below */
+    }
+
+    .metric-card .m-label {
+      font-size: 10.5px; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--text-muted);
+    }
+
+    /* Large number value */
+    .metric-card .m-value { font-size: 26px; font-weight: 500; line-height: 1; }
+
+    /* Status line below the value */
+    .metric-card .m-status {
+      font-size: 11px; display: flex; align-items: center; gap: 5px; margin-top: 2px;
+    }
+
+    /* Small semantic status dot */
+    .dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+    .dot.green { background: var(--green); }
+    .dot.amber { background: var(--amber); }
+    .dot.red   { background: var(--red); }
+    .dot.blue  { background: var(--blue); }
+
+    /* Colored top borders for metric cards */
+    .metric-card.border-green { border-top-color: var(--green); }
+    .metric-card.border-amber { border-top-color: var(--amber); }
+    .metric-card.border-red   { border-top-color: var(--red); }
+    .metric-card.border-blue  { border-top-color: var(--blue); }
+
+
+    /* ─────────────────────────────────────────
+       SHARED PANEL CARD STYLE
+    ───────────────────────────────────────── */
+    .panel-card {
+      background: var(--card-bg);
+      border-radius: var(--card-radius);
+      box-shadow: var(--card-shadow);
+      padding: 18px 20px 20px;
+      display: flex; flex-direction: column;
+    }
+
+    .card-header {
+      display: flex; align-items: center;
+      justify-content: space-between; margin-bottom: 8px;
+    }
+
+    .card-header-left { display: flex; align-items: center; gap: 8px; }
+
+    .card-title {
+      font-size: 11px; font-weight: 500;
+      letter-spacing: 0.1em; text-transform: uppercase;
+    }
+
+    .card-header svg {
+      width: 14px; height: 14px;
+      stroke: var(--text-muted); fill: none; stroke-width: 1.8;
+    }
+
+    /* Thin divider below each card title */
+    .card-divider { height: 1.5px; background: #EDECEA; border-radius: 2px; margin-bottom: 14px; }
+
+    /* Status / count badges */
+    .badge { font-size: 10px; padding: 2px 8px; border-radius: 20px; font-weight: 500; letter-spacing: 0.04em; }
+    .badge.green { background: #DCFCE7; color: #15803D; }
+    .badge.amber { background: #FEF3C7; color: #92400E; }
+    .badge.red   { background: #FEE2E2; color: #991B1B; }
+    .badge.blue  { background: #DBEAFE; color: #1D4ED8; }
+    .badge.gray  { background: #F3F4F6; color: #374151; }
+
+
+    /* ─────────────────────────────────────────
+       MIDDLE PANELS ROW
+    ───────────────────────────────────────── */
+    .panels-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 14px; margin-bottom: 18px; align-items: start;
+    }
+
+    /* Usage summary — sparkline bar chart */
+    .spark-bars {
+      display: flex; align-items: flex-end; gap: 4px; height: 48px; margin-top: 4px;
+    }
+    .spark-bars .bar {
+      flex: 1; background: #E0E7FF;
+      border-radius: 3px 3px 0 0; transition: background 0.2s; cursor: default;
+    }
+    .spark-bars .bar:hover { background: #7C8CF8; }
+
+    /* Users card — avatar rows */
+    .user-list { display: flex; flex-direction: column; gap: 10px; margin-top: 2px; }
+    .user-row  { display: flex; align-items: center; justify-content: space-between; }
+    .user-info { display: flex; align-items: center; gap: 9px; }
+    .avatar {
+      width: 28px; height: 28px; border-radius: 50%;
+      background: #E0E7FF; color: #3730A3;
+      font-size: 10px; font-weight: 500;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .user-name { font-size: 12px; }
+    .user-role { font-size: 10.5px; color: var(--text-muted); }
+
+    /* Suspicious activity — flagged event list */
+    .activity-list { display: flex; flex-direction: column; gap: 10px; }
+    .activity-item {
+      display: flex; gap: 10px; padding: 10px 12px;
+      background: #FFF8F8; border-left: 3px solid var(--red);
+      border-radius: 0 5px 5px 0;
+    }
+    .activity-item.warn { background: #FFFBF0; border-left-color: var(--amber); }
+    .activity-item svg {
+      width: 14px; height: 14px; stroke: var(--red);
+      fill: none; stroke-width: 2; flex-shrink: 0; margin-top: 1px;
+    }
+    .activity-item.warn svg { stroke: var(--amber); }
+    .activity-desc { font-size: 11.5px; line-height: 1.5; }
+    .activity-time { font-size: 10.5px; color: var(--text-muted); margin-top: 2px; }
+
+
+    /* ─────────────────────────────────────────
+       BOTTOM ROW
+    ───────────────────────────────────────── */
+    .bottom-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+    /* Active chats list */
+    .chat-list { display: flex; flex-direction: column; gap: 9px; }
+    .chat-item {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 8px 10px; background: #F9FAFB; border-radius: 5px;
+    }
+    .chat-meta { font-size: 11.5px; }
+    .chat-time { font-size: 10.5px; color: var(--text-muted); }
+
+    /* System health — progress bars */
+    .health-list { display: flex; flex-direction: column; gap: 10px; }
+    .health-item { display: flex; align-items: center; justify-content: space-between; }
+    .health-label { font-size: 12px; }
+    .health-bar-track { width: 100px; height: 5px; background: #F0F0F0; border-radius: 99px; overflow: hidden; }
+    .health-bar-fill  { height: 100%; border-radius: 99px; transition: width 0.4s ease; }
+    .health-bar-fill.green { background: var(--green); }
+    .health-bar-fill.amber { background: var(--amber); }
+    .health-bar-fill.red   { background: var(--red); }
+
+
+    /* ─────────────────────────────────────────
+       KILL SWITCH BUTTON
+       Fixed bottom-right; opens modal on click
+    ───────────────────────────────────────── */
+    .kill-switch {
+      position: fixed; bottom: 24px; right: 28px;
+      background: var(--kill-red); color: #fff; border: none;
+      font-family: var(--font); font-size: 12px; font-weight: 500;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      padding: 13px 22px; border-radius: 5px; cursor: pointer; z-index: 200;
+      transition: background 0.15s, transform 0.1s;
+      box-shadow: 0 4px 14px rgba(201,59,59,0.4);
+    }
+    .kill-switch:hover  { background: #AE2A2A; }
+    .kill-switch:active { transform: scale(0.97); }
+
+
+    /* ─────────────────────────────────────────
+       KILL SWITCH CONFIRMATION MODAL
+       Requires typing "CONFIRM" before executing
+    ───────────────────────────────────────── */
+    .modal-overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.55); z-index: 300;
+      align-items: center; justify-content: center;
+    }
+    .modal-overlay.visible { display: flex; }
+
+    .modal {
+      background: #fff; border-radius: 10px;
+      padding: 28px 32px; width: 360px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+    }
+    .modal-title {
+      font-size: 14px; font-weight: 500; letter-spacing: 0.06em;
+      text-transform: uppercase; color: var(--red); margin-bottom: 10px;
+    }
+    .modal-desc { font-size: 12px; color: #555; line-height: 1.7; margin-bottom: 18px; }
+
+    /* Confirmation text input */
+    .modal input {
+      width: 100%; font-family: var(--font); font-size: 13px;
+      padding: 10px 12px; border: 1.5px solid #ddd; border-radius: 5px;
+      outline: none; margin-bottom: 14px;
+      transition: border-color 0.15s; letter-spacing: 0.05em;
+    }
+    .modal input:focus { border-color: var(--red); }
+
+    .modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+
+    .btn-cancel {
+      font-family: var(--font); font-size: 12px; padding: 9px 16px;
+      background: #f3f4f6; border: none; border-radius: 5px;
+      cursor: pointer; transition: background 0.15s;
+    }
+    .btn-cancel:hover { background: #e5e7eb; }
+
+    /* Confirm button — disabled (grayed) until input === "CONFIRM" */
+    .btn-confirm {
+      font-family: var(--font); font-size: 12px; font-weight: 500;
+      letter-spacing: 0.06em; padding: 9px 16px;
+      background: var(--kill-red); color: #fff; border: none;
+      border-radius: 5px; cursor: pointer;
+      transition: background 0.15s, opacity 0.15s;
+      opacity: 0.4; pointer-events: none;
+    }
+    /* JS adds .enabled when the user types "CONFIRM" */
+    .btn-confirm.enabled { opacity: 1; pointer-events: all; }
+    .btn-confirm.enabled:hover { background: #AE2A2A; }
+
+
+    /* ─────────────────────────────────────────
+       RESPONSIVE BREAKPOINTS
+    ───────────────────────────────────────── */
+    @media (max-width: 900px) {
+      .metrics-row { grid-template-columns: repeat(2, 1fr); }
+      .panels-row  { grid-template-columns: 1fr; }
+      .bottom-row  { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 600px) {
+      :root { --sidebar-w: 0px; }
+      aside { display: none; }
+      main  { padding: 20px 16px 100px; }
+      .metrics-row { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ─────────────────────────────────────────
+       SIDEBAR
+       Grouped nav with left-border active state
+       and pulsing live dot at the top.
+  ───────────────────────────────────────── -->
+  <aside>
+    <div class="sidebar-logo">
+      <span class="live-dot"></span>
+      Control Panel
+    </div>
+
+    <div class="nav-section-label">Monitoring</div>
+    <a class="nav-item active" href="#">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+      admin page
+    </a>
+    <a class="nav-item" href="#">
+      <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      security logs
+    </a>
+
+    <div class="nav-section-label">Management</div>
+    <a class="nav-item" href="#">
+      <svg viewBox="0 0 24 24"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+      key management
+    </a>
+    <a class="nav-item" href="#">
+      <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      user management
+    </a>
+  </aside>
+
+
+  <!-- ─────────────────────────────────────────
+       MAIN CONTENT
+  ───────────────────────────────────────── -->
+  <main>
+
+    <!-- Page header: title left, last-updated timestamp right -->
+    <div class="page-header">
+      <span class="page-title">Admin Dashboard</span>
+      <span class="last-updated" id="timestamp">last updated: —</span>
+    </div>
+
+
+    <!-- ── TOP METRICS ROW ──
+         4 cards: system vitals / GPU usage / active sessions / API health
+         Each has a colored top border, big number, and status line. -->
+    <div class="metrics-row">
+
+      <div class="metric-card border-green">
+        <span class="m-label">System Vitals</span>
+        <span class="m-value">98<span style="font-size:14px;color:var(--text-muted)">%</span></span>
+        <span class="m-status" style="color:var(--green)">
+          <span class="dot green"></span> All systems nominal
+        </span>
+      </div>
+
+      <div class="metric-card border-amber">
+        <span class="m-label">GPU Usage</span>
+        <span class="m-value">74<span style="font-size:14px;color:var(--text-muted)">%</span></span>
+        <span class="m-status" style="color:var(--amber)">
+          <span class="dot amber"></span> Elevated load
+        </span>
+      </div>
+
+      <div class="metric-card border-blue">
+        <span class="m-label">Active Sessions</span>
+        <span class="m-value">312</span>
+        <span class="m-status" style="color:var(--blue)">
+          <span class="dot blue"></span> +18 in last hour
+        </span>
+      </div>
+
+      <!-- API health: green dot pulses to show it's live -->
+      <div class="metric-card border-green">
+        <span class="m-label">API Health</span>
+        <span class="m-value" style="color:var(--green)">OK</span>
+        <span class="m-status" style="color:var(--green)">
+          <span class="dot green" style="animation:pulse 2s infinite"></span> 42ms avg latency
+        </span>
+      </div>
+
+    </div><!-- END metrics row -->
+
+
+    <!-- ── MIDDLE PANELS ROW ──
+         Usage summary (sparkline) / Users (avatar list) / Suspicious activity -->
+    <div class="panels-row">
+
+      <!-- Usage Summary with mini bar chart -->
+      <div class="panel-card">
+        <div class="card-header">
+          <div class="card-header-left">
+            <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            <span class="card-title">Usage Summary</span>
+          </div>
+          <span class="badge blue">7d</span>
+        </div>
+        <div class="card-divider"></div>
+        <!-- Bar heights represent relative daily usage — hover to highlight -->
+        <div class="spark-bars">
+          <div class="bar" style="height:40%"></div>
+          <div class="bar" style="height:65%"></div>
+          <div class="bar" style="height:55%"></div>
+          <div class="bar" style="height:80%"></div>
+          <div class="bar" style="height:70%"></div>
+          <div class="bar" style="height:90%"></div>
+          <div class="bar" style="height:75%"></div>
+        </div>
+        <!-- Summary stats below the chart -->
+        <div style="display:flex;gap:18px;margin-top:14px">
+          <div>
+            <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em">Peak</div>
+            <div style="font-size:15px;font-weight:500;margin-top:3px">2,841</div>
+          </div>
+          <div>
+            <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em">Avg/day</div>
+            <div style="font-size:15px;font-weight:500;margin-top:3px">1,490</div>
+          </div>
+          <div>
+            <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em">Total</div>
+            <div style="font-size:15px;font-weight:500;margin-top:3px">10,430</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Users: avatar + name + role + status badge per row -->
+      <div class="panel-card">
+        <div class="card-header">
+          <div class="card-header-left">
+            <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            <span class="card-title">Users</span>
+          </div>
+          <span class="badge gray">312 online</span>
+        </div>
+        <div class="card-divider"></div>
+        <div class="user-list">
+          <div class="user-row">
+            <div class="user-info">
+              <div class="avatar">JM</div>
+              <div><div class="user-name">Jamie M.</div><div class="user-role">Super Admin</div></div>
+            </div>
+            <span class="badge green">active</span>
+          </div>
+          <div class="user-row">
+            <div class="user-info">
+              <div class="avatar" style="background:#FEF3C7;color:#92400E">PK</div>
+              <div><div class="user-name">Priya K.</div><div class="user-role">Developer</div></div>
+            </div>
+            <span class="badge green">active</span>
+          </div>
+          <div class="user-row">
+            <div class="user-info">
+              <!-- Red avatar tint matches the "flagged" status badge -->
+              <div class="avatar" style="background:#FEE2E2;color:#991B1B">RS</div>
+              <div><div class="user-name">Ryan S.</div><div class="user-role">Analyst</div></div>
+            </div>
+            <span class="badge red">flagged</span>
+          </div>
+          <div class="user-row">
+            <div class="user-info">
+              <div class="avatar" style="background:#F0FDF4;color:#15803D">AL</div>
+              <div><div class="user-name">Aiko L.</div><div class="user-role">Viewer</div></div>
+            </div>
+            <span class="badge gray">idle</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Suspicious Activity: red = critical, amber = warning -->
+      <div class="panel-card">
+        <div class="card-header">
+          <div class="card-header-left">
+            <svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            <span class="card-title">Suspicious Activity</span>
+          </div>
+          <!-- Count badge makes the severity immediately visible -->
+          <span class="badge red">3 alerts</span>
+        </div>
+        <div class="card-divider"></div>
+        <div class="activity-list">
+          <div class="activity-item">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <div>
+              <div class="activity-desc">Brute force attempt — 47 failed logins from 192.168.4.21</div>
+              <div class="activity-time">2 min ago</div>
+            </div>
+          </div>
+          <div class="activity-item">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <div>
+              <div class="activity-desc">API key rs_prod_82x accessed from unknown IP</div>
+              <div class="activity-time">11 min ago</div>
+            </div>
+          </div>
+          <!-- Amber item = lower severity warning -->
+          <div class="activity-item warn">
+            <svg viewBox="0 0 24 24" style="stroke:var(--amber)"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            <div>
+              <div class="activity-desc">Unusual export volume by user Ryan S. (4.2 GB)</div>
+              <div class="activity-time">34 min ago</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- END middle panels row -->
+
+
+    <!-- ── BOTTOM ROW ──
+         Active chats (live conversation list) / System health (progress bars) -->
+    <div class="bottom-row">
+
+      <div class="panel-card">
+        <div class="card-header">
+          <div class="card-header-left">
+            <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            <span class="card-title">Active Chats</span>
+          </div>
+          <span class="badge blue">8 live</span>
+        </div>
+        <div class="card-divider"></div>
+        <!-- Each row shows a truncated preview of the conversation -->
+        <div class="chat-list">
+          <div class="chat-item">
+            <span class="chat-meta">User #4821 — "Can you help me with…"</span>
+            <span class="chat-time">now</span>
+          </div>
+          <div class="chat-item">
+            <span class="chat-meta">User #3302 — "What are the rate limits…"</span>
+            <span class="chat-time">1m</span>
+          </div>
+          <div class="chat-item">
+            <span class="chat-meta">User #7719 — "I'm getting a 403 error…"</span>
+            <span class="chat-time">3m</span>
+          </div>
+          <div class="chat-item">
+            <span class="chat-meta">User #1044 — "Please summarize this…"</span>
+            <span class="chat-time">5m</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- System health: color-coded bars (green/amber/red) per resource -->
+      <div class="panel-card">
+        <div class="card-header">
+          <div class="card-header-left">
+            <svg viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+            <span class="card-title">System Health</span>
+          </div>
+          <span class="badge green">healthy</span>
+        </div>
+        <div class="card-divider"></div>
+        <div class="health-list">
+          <div class="health-item">
+            <span class="health-label">CPU</span>
+            <div style="display:flex;align-items:center;gap:10px">
+              <div class="health-bar-track"><div class="health-bar-fill green" style="width:38%"></div></div>
+              <span style="font-size:11px;color:var(--text-muted);min-width:30px">38%</span>
+            </div>
+          </div>
+          <div class="health-item">
+            <span class="health-label">Memory</span>
+            <div style="display:flex;align-items:center;gap:10px">
+              <!-- Amber bar signals memory is getting high -->
+              <div class="health-bar-track"><div class="health-bar-fill amber" style="width:71%"></div></div>
+              <span style="font-size:11px;color:var(--text-muted);min-width:30px">71%</span>
+            </div>
+          </div>
+          <div class="health-item">
+            <span class="health-label">Disk</span>
+            <div style="display:flex;align-items:center;gap:10px">
+              <div class="health-bar-track"><div class="health-bar-fill green" style="width:52%"></div></div>
+              <span style="font-size:11px;color:var(--text-muted);min-width:30px">52%</span>
+            </div>
+          </div>
+          <div class="health-item">
+            <span class="health-label">Network</span>
+            <div style="display:flex;align-items:center;gap:10px">
+              <div class="health-bar-track"><div class="health-bar-fill green" style="width:24%"></div></div>
+              <span style="font-size:11px;color:var(--text-muted);min-width:30px">24%</span>
+            </div>
+          </div>
+          <div class="health-item">
+            <span class="health-label">GPU</span>
+            <div style="display:flex;align-items:center;gap:10px">
+              <!-- Amber matches the GPU metric card above -->
+              <div class="health-bar-track"><div class="health-bar-fill amber" style="width:74%"></div></div>
+              <span style="font-size:11px;color:var(--text-muted);min-width:30px">74%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- END bottom row -->
+
+  </main>
+
+
+  <!-- ─────────────────────────────────────────
+       KILL SWITCH
+       Fixed bottom-right button that opens
+       the modal confirmation dialog.
+  ───────────────────────────────────────── -->
+  <button class="kill-switch" onclick="openKillModal()">KILL SWITCH</button>
+
+
+  <!-- ─────────────────────────────────────────
+       KILL SWITCH CONFIRMATION MODAL
+       User must type "CONFIRM" before the
+       Execute button becomes clickable.
+  ───────────────────────────────────────── -->
+  <div class="modal-overlay" id="killModal">
+    <div class="modal">
+      <div class="modal-title">⚠ Confirm Kill Switch</div>
+      <p class="modal-desc">
+        This will immediately terminate all active sessions, disable all API keys,
+        and shut down running services.<br><br>
+        Type <strong>CONFIRM</strong> below to proceed.
+      </p>
+      <!-- oninput fires checkKillInput() which enables/disables the confirm btn -->
+      <input type="text" id="killInput" placeholder="Type CONFIRM to enable" oninput="checkKillInput()" autocomplete="off" />
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="closeKillModal()">Cancel</button>
+        <button class="btn-confirm" id="killConfirmBtn" onclick="executeKillSwitch()">Execute</button>
+      </div>
+    </div>
+  </div>
+
+
+  <script>
+    // ─── TIMESTAMP ───────────────────────────────────────────────
+    // Updates the "last updated" text in the page header.
+    // Refreshes every 30 seconds to reflect live polling cadence.
+    function updateTimestamp() {
+      document.getElementById('timestamp').textContent =
+        'last updated: ' + new Date().toLocaleTimeString();
+    }
+    updateTimestamp();
+    setInterval(updateTimestamp, 30000);
+
+
+    // ─── KILL SWITCH MODAL ───────────────────────────────────────
+
+    // Show the modal overlay and focus the input
+    function openKillModal() {
+      document.getElementById('killModal').classList.add('visible');
+      document.getElementById('killInput').value = '';
+      document.getElementById('killConfirmBtn').classList.remove('enabled');
+      setTimeout(() => document.getElementById('killInput').focus(), 50);
+    }
+
+    // Hide the modal and reset the input field
+    function closeKillModal() {
+      document.getElementById('killModal').classList.remove('visible');
+      document.getElementById('killInput').value = '';
+      document.getElementById('killConfirmBtn').classList.remove('enabled');
+    }
+
+    // Enable the confirm button only when input value exactly matches "CONFIRM"
+    function checkKillInput() {
+      const val = document.getElementById('killInput').value;
+      document.getElementById('killConfirmBtn').classList.toggle('enabled', val === 'CONFIRM');
+    }
+
+    // Executes the kill switch — replace alert() with your real API call
+    function executeKillSwitch() {
+      closeKillModal();
+      alert('Kill switch executed. All services halted.');
+    }
+
+    // Clicking the dark overlay background also closes the modal
+    document.getElementById('killModal').addEventListener('click', function(e) {
+      if (e.target === this) closeKillModal();
+    });
+  </script>
+
+</body>
+</html>
