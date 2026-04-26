@@ -166,6 +166,13 @@
        DASHBOARD VIEW — grid layout
     ───────────────────────────────────────── */
     .panels-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin-bottom: 18px; align-items: start; }
+    /*.panels-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 14px;
+      margin-bottom: 18px;
+      align-items: start;
+    }*/
     .bottom-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 
     /* Sparkline bars */
@@ -420,60 +427,71 @@
        and pulsing live dot at the top.
   ───────────────────────────────────────── -->
   <aside>
+
     <div class="sidebar-logo">
       <span class="live-dot"></span>
       Control Panel
     </div>
 
+
     <div class="nav-section-label">Monitoring</div>
-    <a class="nav-item active" href="#">
+
+    <a class="nav-item active" id="nav-admin-dashboard" href="#">
       <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-      Admin Page
+      Admin Dashboard
     </a>
-    <a class="nav-item" href="#">
+
+    <a class="nav-item" id="nav-security-logs" href="#">
       <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
       Security Logs
     </a>
 
+
     <div class="nav-section-label">Management</div>
-    <a class="nav-item" href="#">
+
+    <a class="nav-item" id="nav-key-management" href="#">
       <svg viewBox="0 0 24 24"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
       Key Management
     </a>
-    <a class="nav-item" href="#">
+
+    <a class="nav-item" id="nav-user-management" href="#">
       <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
       User Management
     </a>
+    
   </aside>
 
 
   <!-- ═══════════════════════════════════════
-       VIEW: DASHBOARD
+       VIEW: ADMIN DASHBOARD
        Static metrics + activity panels
   ═══════════════════════════════════════ -->
-  <div class="view active-view" id="view-dashboard">
+  <div class="view active-view" id="view-admin-dashboard">
 
     <div class="page-header">
       <span class="page-title">Admin Dashboard</span>
-      <span class="last-updated" id="timestamp">last updated: —</span>
+      <span class="last-updated" id="timestamp">last updated: —</span>    
     </div>
 
     <!-- Top metrics row -->
     <div class="metrics-row">
+
       <div class="metric-card border-green">
         <span class="m-label">System Vitals</span>
-        <span class="m-value">98<span style="font-size:14px;color:var(--text-muted)">%</span></span>
-        <span class="m-status" style="color:var(--green)"><span class="dot green"></span> All systems nominal</span>
+        <span class="m-value" id="system_vitals">98<span style="font-size:14px;color:var(--text-muted)">%</span></span>    <!-- id="system_vitals" -->
+        <span class="m-status" style="color:var(--green)"><span class="dot green"></span> All systems nominal</span>    <!-- pos add id to change -->
       </div>
+
       <div class="metric-card border-amber">
         <span class="m-label">GPU Usage</span>
-        <span class="m-value">74<span style="font-size:14px;color:var(--text-muted)">%</span></span>
-        <span class="m-status" style="color:var(--amber)"><span class="dot amber"></span> Elevated load</span>
+        <span class="m-value" id="gpu_usage">74<span style="font-size:14px;color:var(--text-muted)">%</span></span>    <!-- id="gpu_usage" -->
+        <span class="m-status" style="color:var(--amber)"><span class="dot amber"></span> Elevated load</span>    <!-- pos add id to change -->
       </div>
+
       <div class="metric-card border-blue">
         <span class="m-label">Active Sessions</span>
-        <span class="m-value">312</span>
-        <span class="m-status" style="color:var(--blue)"><span class="dot blue"></span> +18 in last hour</span>
+        <span class="m-value" id="active_sessions">312</span>    <!-- id="active_sessions" -->
+        <span class="m-status" style="color:var(--blue)"><span class="dot blue"></span> +18 in last hour</span>    <!-- pos add id to change -->
       </div>
 
       <!-- API Health card — status comes from /api/health poll -->
@@ -485,10 +503,13 @@
           <span id="apiHealthText">checking...</span>
         </span>
       </div>
+
     </div>
 
     <!-- Middle panels -->
     <div class="panels-row">
+
+      <!-- Usage Summary Card -->
       <div class="panel-card">
         <div class="card-header">
           <div class="card-header-left">
@@ -511,6 +532,7 @@
         </div>
       </div>
 
+      <!-- Users Card -->
       <div class="panel-card">
         <div class="card-header">
           <div class="card-header-left">
@@ -528,6 +550,7 @@
         </div>
       </div>
 
+      <!-- Suspicious Activity Card -->
       <div class="panel-card">
         <div class="card-header">
           <div class="card-header-left">
@@ -545,8 +568,11 @@
       </div>
     </div>
 
-    <!-- Bottom row -->
+
+    <!-- Bottom panels -->
     <div class="bottom-row">
+
+      <!-- Active Chats Card -->
       <div class="panel-card">
         <div class="card-header">
           <div class="card-header-left">
@@ -564,6 +590,7 @@
         </div>
       </div>
 
+      <!-- System Health Card -->
       <div class="panel-card">
         <div class="card-header">
           <div class="card-header-left">
@@ -584,6 +611,42 @@
     </div>
 
   </div><!-- END view-dashboard -->
+
+
+<!-- ═══════════════════════════════════════
+       VIEW: SECURITY LOGS
+       
+  ═══════════════════════════════════════ -->
+  <div class="view" id="view-security-logs">
+    <div class="page-header">
+      <span class="page-title">Security Logs</span>
+      <span class="last-updated" id="security-timestamp">last updated: —</span>    
+    </div>
+  </div><!-- END view-security-logs -->
+
+
+<!-- ═══════════════════════════════════════
+       VIEW: KEY MANAGEMENT
+       
+  ═══════════════════════════════════════ -->
+  <div class="view" id="view-key-management">
+    <div class="page-header">
+      <span class="page-title">Key Management</span>
+      <span class="last-updated" id="key-timestamp">last updated: —</span>    
+    </div>
+  </div><!-- END view-key-management -->
+
+
+<!-- ═══════════════════════════════════════
+       VIEW: USER MANAGEMENT
+       
+  ═══════════════════════════════════════ -->
+  <div class="view" id="view-user-management">
+    <div class="page-header">
+      <span class="page-title">User Management</span>
+      <span class="last-updated" id="user-timestamp">last updated: —</span>    
+    </div>
+  </div><!-- END view-user-management -->
 
 
   <!-- ═══════════════════════════════════════
@@ -719,10 +782,21 @@
       if (name === 'health' && !viewLoaded.health) { loadHealth(); viewLoaded.health = true; }
     }
 
+    // event listeners
+    document.getElementById('nav-admin-dashboard').addEventListener('click', () => showView('admin-dashboard'));
+    document.getElementById('nav-security-logs').addEventListener('click', () => showView('security-logs'));
+    document.getElementById('nav-key-management').addEventListener('click', () => showView('key-management'));
+    document.getElementById('nav-user-management').addEventListener('click', () => showView('user-management'));
 
     // ─── TIMESTAMP ──────────────────────────────────────────────
     function updateTimestamp() {
       document.getElementById('timestamp').textContent =
+        'last updated: ' + new Date().toLocaleTimeString();
+      document.getElementById('security-timestamp').textContent =
+        'last updated: ' + new Date().toLocaleTimeString();
+      document.getElementById('key-timestamp').textContent =
+        'last updated: ' + new Date().toLocaleTimeString();
+      document.getElementById('user-timestamp').textContent =
         'last updated: ' + new Date().toLocaleTimeString();
     }
     updateTimestamp();
