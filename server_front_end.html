@@ -149,6 +149,14 @@
       box-shadow: var(--card-shadow); padding: 18px 20px 20px;
       display: flex; flex-direction: column;
     }
+
+    /* for key management page panel */
+    .key-panel-card {
+      background: var(--card-bg); border-radius: var(--card-radius);
+      box-shadow: var(--card-shadow); padding: 18px 20px 20px;
+      display: flex; flex-direction: column;
+    }
+
     .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
     .card-header-left { display: flex; align-items: center; gap: 8px; }
     .card-title { font-size: 11px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; }
@@ -166,13 +174,8 @@
        DASHBOARD VIEW — grid layout
     ───────────────────────────────────────── */
     .panels-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin-bottom: 18px; align-items: start; }
-    /*.panels-row {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 14px;
-      margin-bottom: 18px;
-      align-items: start;
-    }*/
+    .key-panel { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin-bottom: 18px; align-items: start; }    /* for key management page panel */
+    
     .bottom-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 
     /* Sparkline bars */
@@ -630,9 +633,33 @@
        
   ═══════════════════════════════════════ -->
   <div class="view" id="view-key-management">
+
     <div class="page-header">
       <span class="page-title">Key Management</span>
       <span class="last-updated" id="key-timestamp">last updated: —</span>    
+    </div>
+
+    <div class="key-panel">
+      <div class="key-panel-card">
+
+        <div class="card-header">
+          <div class="card-header-left">
+            <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            <span class="card-title">Users</span>
+          </div>
+          <span class="badge gray">312 online</span>
+        </div>
+
+        <div class="card-divider"></div>
+
+        <div class="user-list">
+          <div class="user-row"><div class="user-info"><div class="avatar">JM</div><div><div class="user-name">Jamie M.</div><div class="user-role">Super Admin</div></div></div><span class="badge green">active</span></div>
+          <div class="user-row"><div class="user-info"><div class="avatar" style="background:#FEF3C7;color:#92400E">PK</div><div><div class="user-name">Priya K.</div><div class="user-role">Developer</div></div></div><span class="badge green">active</span></div>
+          <div class="user-row"><div class="user-info"><div class="avatar" style="background:#FEE2E2;color:#991B1B">RS</div><div><div class="user-name">Ryan S.</div><div class="user-role">Analyst</div></div></div><span class="badge red">flagged</span></div>
+          <div class="user-row"><div class="user-info"><div class="avatar" style="background:#F0FDF4;color:#15803D">AL</div><div><div class="user-name">Aiko L.</div><div class="user-role">Viewer</div></div></div><span class="badge gray">idle</span></div>
+        </div>
+
+      </div>
     </div>
   </div><!-- END view-key-management -->
 
