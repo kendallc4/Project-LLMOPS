@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Admin Dashboard</title>
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet" />
+  <link rel="icon" type="image/png" href="web_icon.png">
 
   <style>
     /* ─────────────────────────────────────────
@@ -452,11 +453,6 @@
 
     <div class="nav-section-label">Management</div>
 
-    <a class="nav-item" id="nav-key-management" href="#">
-      <svg viewBox="0 0 24 24"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
-      Key Management
-    </a>
-
     <a class="nav-item" id="nav-user-management" href="#">
       <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
       User Management
@@ -628,34 +624,6 @@
   </div><!-- END view-security-logs -->
 
 
-<!-- ═══════════════════════════════════════
-       VIEW: KEY MANAGEMENT
-       
-  ═══════════════════════════════════════ -->
- <div class="view" id="view-key-management">
-
-    <div class="page-header">
-      <span class="page-title">Key Management</span>
-      <button class="btn btn-primary" onclick="openAddKeyModal()">
-          <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          Generate Key
-        </button>   
-    </div>
-
-    <div class="panel-card">
-        <div class="alert alert-warning">
-          <svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-          API keys provide access to the proxy endpoints. Keep them secure and rotate regularly.
-        </div>
- 
-        <div id="apiKeysContainer">
-          <!-- API keys will be populated here -->
-        </div>
-      </div>
-    
-  </div><!-- END view-key-management -->
-
-
 
 <!-- ═══════════════════════════════════════
        VIEW: USER MANAGEMENT
@@ -672,9 +640,11 @@
     </div>
 
     <div class="panel-card">
-        <div class="alert alert-info">
-          <svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-          Manage users with access to the Ollama proxy. Users can be assigned different roles and permissions.
+        <div class="card-header-left">
+            <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            <span class="card-title">Users</span>
+          </div>
+          <span class="badge gray">312 online</span>
         </div>
  
         <table class="data-table">
@@ -833,7 +803,6 @@
     // event listeners
     document.getElementById('nav-admin-dashboard').addEventListener('click', () => showView('admin-dashboard'));
     document.getElementById('nav-security-logs').addEventListener('click', () => showView('security-logs'));
-    document.getElementById('nav-key-management').addEventListener('click', () => showView('key-management'));
     document.getElementById('nav-user-management').addEventListener('click', () => showView('user-management'));
 
     // ─── TIMESTAMP ──────────────────────────────────────────────
