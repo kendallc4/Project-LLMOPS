@@ -632,36 +632,29 @@
        VIEW: KEY MANAGEMENT
        
   ═══════════════════════════════════════ -->
-  <div class="view" id="view-key-management">
+ <div class="view" id="view-key-management">
 
     <div class="page-header">
       <span class="page-title">Key Management</span>
-      <span class="last-updated" id="key-timestamp">last updated: —</span>    
+      <button class="btn btn-primary" onclick="openAddKeyModal()">
+          <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Generate Key
+        </button>   
     </div>
 
-    <div class="key-panel">
-      <div class="key-panel-card">
-
-        <div class="card-header">
-          <div class="card-header-left">
-            <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-            <span class="card-title">Users</span>
-          </div>
-          <span class="badge gray">312 online</span>
+    <div class="panel-card">
+        <div class="alert alert-warning">
+          <svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          API keys provide access to the proxy endpoints. Keep them secure and rotate regularly.
         </div>
-
-        <div class="card-divider"></div>
-
-        <div class="user-list">
-          <div class="user-row"><div class="user-info"><div class="avatar">JM</div><div><div class="user-name">Jamie M.</div><div class="user-role">Super Admin</div></div></div><span class="badge green">active</span></div>
-          <div class="user-row"><div class="user-info"><div class="avatar" style="background:#FEF3C7;color:#92400E">PK</div><div><div class="user-name">Priya K.</div><div class="user-role">Developer</div></div></div><span class="badge green">active</span></div>
-          <div class="user-row"><div class="user-info"><div class="avatar" style="background:#FEE2E2;color:#991B1B">RS</div><div><div class="user-name">Ryan S.</div><div class="user-role">Analyst</div></div></div><span class="badge red">flagged</span></div>
-          <div class="user-row"><div class="user-info"><div class="avatar" style="background:#F0FDF4;color:#15803D">AL</div><div><div class="user-name">Aiko L.</div><div class="user-role">Viewer</div></div></div><span class="badge gray">idle</span></div>
+ 
+        <div id="apiKeysContainer">
+          <!-- API keys will be populated here -->
         </div>
-
       </div>
-    </div>
+    
   </div><!-- END view-key-management -->
+
 
 
 <!-- ═══════════════════════════════════════
@@ -669,10 +662,38 @@
        
   ═══════════════════════════════════════ -->
   <div class="view" id="view-user-management">
+
     <div class="page-header">
       <span class="page-title">User Management</span>
-      <span class="last-updated" id="user-timestamp">last updated: —</span>    
+      <button class="btn btn-primary" onclick="openAddUserModal()">
+          <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add User
+        </button> 
     </div>
+
+    <div class="panel-card">
+        <div class="alert alert-info">
+          <svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+          Manage users with access to the Ollama proxy. Users can be assigned different roles and permissions.
+        </div>
+ 
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>User</th>
+              <th>Email</th>
+              <th>Role</th>
+              <th>Status</th>
+              <th>Created</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="usersTableBody">
+            <!-- Users will be populated here -->
+          </tbody>
+        </table>
+      </div>
+
   </div><!-- END view-user-management -->
 
 
