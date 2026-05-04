@@ -3,7 +3,6 @@
 <head>
   <title>Ollama Chatbot</title>
   <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;600&display=swap" rel="stylesheet">
-  <link rel="icon" type="image/png" href="web_icon.png">
  
 <style>
 * { box-sizing: border-box; }
@@ -477,10 +476,6 @@ body {
  
       <div class="topbar">
         <div class="top-controls">
-          <label class="pill">
-            File Upload
-            <input type="file" id="fileInput" hidden multiple>
-          </label>
  
           <select id="model" class="pill">
             <option value="llava:latest">LLaVA</option>
@@ -491,8 +486,6 @@ body {
  
         <div class="profile" onclick="toggleSettings()">👤</div>
       </div>
- 
-      <div id="filePreview" style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px;"></div>
  
       <div class="chat-wrapper">
         <div id="chat"></div>
@@ -730,7 +723,6 @@ function outsideClick(e) {
  
 // ── Chat ──
 let chatHistory = [];
-let uploadedFiles = [];
 let currentSessionId = null;
  
 function addMessage(content, type) {
@@ -756,33 +748,6 @@ function removeLoadingMessage() {
   if (el) el.remove();
 }
  
-document.getElementById('fileInput').addEventListener('change', async (e) => {
-  const files = Array.from(e.target.files);
-  uploadedFiles = [];
- 
-  const preview = document.getElementById("filePreview");
-  preview.innerHTML = "";
- 
-  for (const file of files) {
-    const base64 = await new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result);
-      reader.readAsDataURL(file);
-    });
- 
-    let type = "text";
-    if (file.type.startsWith("image/")) type = "image";
-    else if (file.type === "application/pdf") type = "pdf";
- 
-    uploadedFiles.push({ type, name: file.name, content: base64 });
- 
-    const chip = document.createElement("div");
-    chip.style.cssText = "background:#e6e6e6;color:#000;padding:6px 10px;border-radius:12px;font-size:12px;";
-    chip.innerText = file.name;
-    preview.appendChild(chip);
-  }
-});
- 
 async function sendMessage() {
   const input = document.getElementById('input');
   const sendBtn = document.getElementById('sendBtn');
@@ -804,7 +769,7 @@ async function sendMessage() {
       body: JSON.stringify({
         model,
         prompt: message,
-        files: uploadedFiles,
+        files: [],
         session_id: currentSessionId || (currentUser + '::' + crypto.randomUUID()),
         rag_enabled: true
       })
